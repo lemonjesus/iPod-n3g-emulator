@@ -42,7 +42,7 @@ int system_controller_init(uc_engine* uc, void* self) {
     uc_hook trace1;
     uc_err err = uc_hook_add(uc, &trace1, UC_HOOK_MEM_WRITE, &pll_lock, self, 0x3C500020, 0x3C500024);
     if (err) {
-        printf("Failed on hook_code() with error returned: %u (%s)", err, uc_strerror(err));
+        log_error("Failed on hook_code() with error returned: %u (%s)", err, uc_strerror(err));
         return -1;
     }
 }

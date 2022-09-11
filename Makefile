@@ -1,4 +1,11 @@
-all: emulator
+all: emulator.o log.o
+	gcc -o emulator emulator.o log.o -lunicorn
 
-emulator: emulator.c core/*.c
-	gcc -o emulator emulator.c  -lunicorn -lpthread -lm
+emulator.o: emulator.c core/*.c
+	gcc -o emulator.o emulator.c -lunicorn -c
+
+log.o: log.c log.h
+	gcc -o log.o log.c -c
+
+clean:
+	rm -f *.o emulator

@@ -12,6 +12,7 @@ typedef struct {
     uint32_t address;
     uint32_t size;
     void* memory;
+    void* meta;
     InitCallback init;
     DestroyCallback destroy;
 } Peripheral;
