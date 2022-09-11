@@ -1,10 +1,13 @@
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
 #include <unicorn/unicorn.h>
 
+#include "disassembler.h"
 #include "log.h"
 
 #include "core/peripheral.h"
-
 #include "core/aes.c"
 #include "core/chipid.c"
 #include "core/interrupt_controllers.c"
@@ -19,18 +22,20 @@
 
 #define ROUND_UP(N, S) ((((N) + (S) - 1) / (S)) * (S))
 
+char* disasm_buffer = NULL;
+
 static void hook_code(uc_engine* uc, uint32_t address, uint32_t size, void* user_data) {
   // get the instruction at this location
-  uint32_t instruction;
-  uc_mem_read(uc, address, &instruction, sizeof(instruction));
-  log_trace(">>> Tracing instruction at 0x%x instruction = 0x%X", address, instruction);
+  disassemble(uc, address, size, disasm_buffer);
+  log_trace(">>> Tracing instruction at 0x%x instruction = %s", address, disasm_buffer);
 }
 
 int main(int argc, char **argv) {
   uc_engine *uc;
   uc_err err;
 
-  log_set_level(LOG_INFO);
+  // log_set_level(LOG_INFO);
+  disasm_buffer = malloc(128);
 
   err = uc_open(UC_ARCH_ARM, UC_MODE_ARM, &uc);
   if (err) {
@@ -108,10 +113,9 @@ int main(int argc, char **argv) {
   if (err) {
     log_fatal("Failed on uc_emu_start() with error returned: %u (%s)", err, uc_strerror(err));
     uint32_t pc;
-    uint32_t inst;
     uc_reg_read(uc, UC_ARM_REG_PC, &pc);
-    uc_mem_read(uc, pc, &inst, sizeof(inst));
-    log_fatal("PC = 0x%x, inst = 0x%x", pc, inst);
+    disassemble(uc, pc, 4, disasm_buffer);
+    log_fatal("PC = 0x%x, inst = %s", pc, disasm_buffer);
 
     // read all registers and print them
     uint32_t registers[16];
