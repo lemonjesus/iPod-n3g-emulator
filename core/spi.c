@@ -5,6 +5,8 @@
 #include <stdlib.h>
 #include "peripheral.h"
 
+#include "../disassembler.h"
+
 #include "../devices/spi_device.h"
 #include "../devices/nor_flash.c"
 
@@ -22,6 +24,8 @@ typedef struct {
     uint32_t SPIDD; // 0x38
 } spi_t;
 
+char* spi_disasm_buffer = NULL;
+
 typedef struct {
     uint8_t port;
     spidev_t* device;
@@ -37,7 +41,8 @@ static void spi_reigon_read(uc_engine* uc, uc_mem_type type, uint32_t address, i
     if(meta->prepared) {
         uint32_t pc;
         uc_reg_read(uc, UC_ARM_REG_PC, &pc);
-        log_trace("SPI %d Reigon Read 0x%x @ PC = 0x%x", meta->port, address, pc);
+        disassemble(uc, address, size, spi_disasm_buffer);
+        log_trace("SPI %d Reigon Read 0x%x @ PC = 0x%x (%s)", meta->port, address, pc, spi_disasm_buffer);
         log_trace("SPICTRL: 0x%X, SPISETUP: 0x%X, SPISTATUS: 0x%X, SPIPIN: 0x%X, SPITXDATA: 0x%X, SPIRXDATA: 0x%X, SPICLKDIV: 0x%X, SPIRXLIMIT: 0x%X, SPIDD: 0x%X", spi->SPICTRL, spi->SPISETUP, spi->SPISTATUS, spi->SPIPIN, spi->SPITXDATA, spi->SPIRXDATA, spi->SPICLKDIV, spi->SPIRXLIMIT, spi->SPIDD);
     }
 
@@ -91,6 +96,8 @@ int spi_init(uc_engine* uc, void* data) {
     Peripheral* self = (Peripheral*)data;
     spi_t* spi = (spi_t*)self->memory;
     spi_meta_t* meta = (spi_meta_t*)self->meta;
+
+    spi_disasm_buffer = malloc(256);
 
     if(meta->port == 0) {
         meta->device = &norboot;

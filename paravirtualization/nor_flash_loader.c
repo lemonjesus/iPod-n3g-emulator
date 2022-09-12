@@ -18,9 +18,8 @@ int nor_flash_loader_execute(uc_engine* uc) {
     log_debug("NOR Flash Loader reading 0x%x bytes from 0x%x to 0x%x", size, src, dest);
     uc_mem_write(uc, dest, ((norflash_meta_t*)norboot.meta)->content + src, size);
 
-    // uint32_t r0 = 4;
-    uint32_t pc = 0x200090b0; //skip the function
-    // uc_reg_write(uc, UC_ARM_REG_R0, &r0);
+    //skip the function
+    uint32_t pc;
     uc_reg_read(uc, UC_ARM_REG_LR, &pc);
     uc_reg_write(uc, UC_ARM_REG_PC, &pc);
 }

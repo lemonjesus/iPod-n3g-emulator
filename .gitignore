@@ -1,3 +1,4 @@
 emulator
 *.bin
 *.o
+.vscode

@@ -5,14 +5,6 @@
 #include <stdlib.h>
 #include "peripheral.h"
 
-#define IICCON(bus)     (*((uint32_t volatile*)(0x3C600000 + 0x300000 * (bus))))
-#define IICSTAT(bus)    (*((uint32_t volatile*)(0x3C600004 + 0x300000 * (bus))))
-#define IICADD(bus)     (*((uint32_t volatile*)(0x3C600008 + 0x300000 * (bus))))
-#define IICDS(bus)      (*((uint32_t volatile*)(0x3C60000C + 0x300000 * (bus))))
-#define IICUNK10(bus)   (*((uint32_t volatile*)(0x3C600010 + 0x300000 * (bus))))
-#define IICUNK14(bus)   (*((uint32_t volatile*)(0x3C600014 + 0x300000 * (bus))))
-#define IICUNK18(bus)   (*((uint32_t volatile*)(0x3C600018 + 0x300000 * (bus))))
-#define IICSTA2(bus)    (*((uint32_t volatile*)(0x3C600020 + 0x300000 * (bus))))
 typedef struct  {
     uint32_t IICCON; // 0x00
     uint32_t IICSTAT; // 0x04
@@ -25,16 +17,28 @@ typedef struct  {
     uint32_t IICSTA2; // 0x20
 } i2c_t;
 
+int i2c_init(uc_engine* uc, void* data) {
+    Peripheral* self = (Peripheral*)data;
+    i2c_t* i2c = (i2c_t*)self->memory;
+
+    i2c->IICSTAT = -1;
+    i2c->IICSTA2 = -1;
+
+    return 0;
+}
+
 Peripheral i2c0 = {
     .name = "I2C 0",
     .address = 0x3C600000,
     .size = sizeof(i2c_t),
+    .init = i2c_init
 };
 
 Peripheral i2c1 = {
     .name = "I2C 1",
     .address = 0x3C900000,
     .size = sizeof(i2c_t),
+    .init = i2c_init
 };
 
 #endif

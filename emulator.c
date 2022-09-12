@@ -14,6 +14,7 @@
 #include "core/gpio.c"
 #include "core/i2c.c"
 #include "core/interrupt_controllers.c"
+#include "core/miu.c"
 #include "core/ram.c"
 #include "core/sha1.c"
 #include "core/spi.c"
@@ -24,6 +25,9 @@
 #include "core/watchdog.c"
 
 #include "paravirtualization/pv.h"
+#include "paravirtualization/delay.c"
+#include "paravirtualization/memcpy.c"
+#include "paravirtualization/memzero.c"
 #include "paravirtualization/nor_flash_loader.c"
 
 #define ROUND_UP(N, S) ((((N) + (S) - 1) / (S)) * (S))
@@ -32,7 +36,7 @@ char* disasm_buffer = NULL;
 
 static void hook_code(uc_engine* uc, uint32_t address, uint32_t size, void* user_data) {
     disassemble(uc, address, size, disasm_buffer);
-    if(address >= 0x22000000) log_trace(">>> Tracing instruction at 0x%x instruction = %s", address, disasm_buffer);
+    if(address < 0x20000000) log_trace(">>> Tracing instruction at 0x%x instruction = %s", address, disasm_buffer);
     if(address == 0x200006d0) {
         log_error("verify_img_header has failed!");
         exit(1);
@@ -111,6 +115,7 @@ int main(int argc, char **argv) {
         i2c0, i2c1,
         interrupt_controller,
         iram,
+        miu,
         otgphy,
         sha1,
         spi0, spi1, spi2,
@@ -143,6 +148,9 @@ int main(int argc, char **argv) {
 
     // initialize paravirtualization
     PV paravirtualizers[] = {
+        delay,
+        memcpy_stub0,
+        memzero_stub0, memzero_stub1,
         nor_flash_loader
     };
 
