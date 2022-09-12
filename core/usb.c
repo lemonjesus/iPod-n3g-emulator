@@ -17,6 +17,14 @@ typedef struct  {
 
 } otgphy_t;
 
+int usb_init(uc_engine* uc, void* data) {
+    Peripheral* self = (Peripheral*)data;
+    uint8_t* usb = (uint8_t*)self->memory;
+
+    usb[14] = 0x1;
+    return 0;
+}
+
 Peripheral otgphy = {
     .name = "OTG PHY",
     .address = 0x3C400000,
@@ -27,6 +35,7 @@ Peripheral usb = {
     .name = "USB",
     .address = 0x38400000,
     .size = 0x1000,
+    .init = usb_init,
 };
 
 #endif

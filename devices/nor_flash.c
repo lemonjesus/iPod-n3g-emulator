@@ -54,7 +54,7 @@ int norboot_write(void* self, uint32_t cmd) {
     log_trace("NORBOOT: Recv Command 0x%x (full buffer: 0x%02x%02x%02x%02x)", cmd, meta->cmd_buffer[0], meta->cmd_buffer[1], meta->cmd_buffer[2], meta->cmd_buffer[3]);
 
     if(cmd == 0xFF) {
-        log_info("NORBOOT: Resetting");
+        log_debug("NORBOOT: Resetting");
         meta->cmd_buffer_index = 0;
         meta->content_buffer_index = 0;
         memset(meta->cmd_buffer, 0, 4);
@@ -62,7 +62,7 @@ int norboot_write(void* self, uint32_t cmd) {
     }
 
     if(meta->cmd_buffer[0] == 0x05) {
-        log_trace("NORBOOT: Read Status?");
+        log_debug("NORBOOT: Read Status?");
         meta->cmd_buffer_index = 0;
         return 1;
     }
@@ -70,7 +70,7 @@ int norboot_write(void* self, uint32_t cmd) {
     if(meta->cmd_buffer[0] == 0x03 && meta->cmd_buffer_index == 4) {
         meta->cmd_buffer_index = 0;
         meta->content_buffer_index = ((uint32_t)meta->cmd_buffer[1] << 16) | ((uint32_t)meta->cmd_buffer[2] << 8) | (uint32_t)meta->cmd_buffer[3];
-        log_trace("NORBOOT: Read Data from 0x%x", meta->content_buffer_index);
+        log_debug("NORBOOT: Read Data from 0x%x", meta->content_buffer_index);
         return 1;
     }
 

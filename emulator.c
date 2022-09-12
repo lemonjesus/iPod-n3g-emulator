@@ -28,13 +28,16 @@ char* disasm_buffer = NULL;
 static void hook_code(uc_engine* uc, uint32_t address, uint32_t size, void* user_data) {
   disassemble(uc, address, size, disasm_buffer);
   log_trace(">>> Tracing instruction at 0x%x instruction = %s", address, disasm_buffer);
+  if(address == 0x2000352c) {
+    log_error("verify_decrypt_image has failed!");
+  }
 }
 
 int main(int argc, char **argv) {
   uc_engine *uc;
   uc_err err;
 
-  // log_set_level(LOG_INFO);
+  // log_set_level(LOG_DEBUG);
   disasm_buffer = malloc(128);
 
   err = uc_open(UC_ARCH_ARM, UC_MODE_ARM, &uc);
