@@ -4,11 +4,11 @@ This is a work in progress emulator for the iPod Nano 3rd Generation. It is writ
 
 ## Building
 
-Install the Unicorn Engine, and then run `make`.
+Install Capstone and the Unicorn Engine, and then run `make`.
 
 ## Progress
 
-Currently I'm making my way through the S5L8702's bootrom. I believe I'm currently at the point where it's trying to read from SPI flash and AES decrypt it. Those peripherals don't do anything currently, so I'm working on that now.
+Currently I'm making my way through the S5L8702's bootrom. It's able to read from NOR Flash over SPI, and it tries to verify the image header, but it fails because I have the wrong file for it. See commit history for more details.
 
 ## License
 GPLv3

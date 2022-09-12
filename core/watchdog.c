@@ -1,5 +1,5 @@
-#ifndef __WATCHDOG_H__
-#define __WATCHDOG_H__
+#ifndef _WATCHDOG_C_
+#define _WATCHDOG_C_
 
 #include <stdint.h>
 #include <stdlib.h>

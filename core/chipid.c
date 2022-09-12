@@ -1,5 +1,5 @@
-#ifndef __CHIPID_H__
-#define __CHIPID_H__
+#ifndef _CHIPID_C_
+#define _CHIPID_C_
 
 #include <stdint.h>
 #include <stdlib.h>

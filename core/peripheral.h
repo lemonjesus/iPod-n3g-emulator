@@ -1,11 +1,8 @@
 #include <stdint.h>
 #include <unicorn/unicorn.h>
 
-#ifndef __PERIPHERAL_H__
-#define __PERIPHERAL_H__
-
-typedef int (*InitCallback)(uc_engine* uc, void* self);
-typedef int (*DestroyCallback)(uc_engine* uc, void* self);
+#ifndef _PERIPHERAL_H_
+#define _PERIPHERAL_H_
 
 typedef struct {
     char* name;
@@ -13,8 +10,8 @@ typedef struct {
     uint32_t size;
     void* memory;
     void* meta;
-    InitCallback init;
-    DestroyCallback destroy;
+    int (*init)(uc_engine* uc, void* self);
+    int (*destroy)(uc_engine* uc, void* self);
 } Peripheral;
 
 #endif

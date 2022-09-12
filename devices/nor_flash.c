@@ -1,5 +1,5 @@
-#ifndef __NORFLASH_H__
-#define __NORFLASH_H__
+#ifndef _NORFLASH_C_
+#define _NORFLASH_C_
 
 #include <stdint.h>
 #include <stdlib.h>

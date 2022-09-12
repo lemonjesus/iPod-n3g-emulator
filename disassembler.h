@@ -1,5 +1,5 @@
-#ifndef __DISASSEMBLER_H__
-#define __DISASSEMBLER_H__
+#ifndef _DISASSEMBLER_H_
+#define _DISASSEMBLER_H_
 
 #include <stdint.h>
 #include <unicorn/unicorn.h>

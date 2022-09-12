@@ -1,5 +1,5 @@
-#ifndef __SPI_DEVICE_H__
-#define __SPI_DEVICE_H__
+#ifndef _SPI_DEVICE_H_
+#define _SPI_DEVICE_H_
 
 typedef struct {
     int (*init)(void* self);

@@ -1,5 +1,5 @@
-#ifndef __DMA_H__
-#define __DMA_H__
+#ifndef _DMA_C_
+#define _DMA_C_
 
 #include <stdint.h>
 #include <stdlib.h>

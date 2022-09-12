@@ -1,5 +1,5 @@
-#ifndef __SYSTEM_CONTROLLER_H__
-#define __SYSTEM_CONTROLLER_H__
+#ifndef _SYSTEM_CONTROLLER_C_
+#define _SYSTEM_CONTROLLER_C_
 
 #include <stdint.h>
 #include <stdlib.h>

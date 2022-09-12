@@ -1,5 +1,5 @@
-#ifndef __UNKNOWN_H__
-#define __UNKNOWN_H__
+#ifndef _UNKNOWN_C_
+#define _UNKNOWN_C_
 
 #include <stdint.h>
 #include <stdlib.h>

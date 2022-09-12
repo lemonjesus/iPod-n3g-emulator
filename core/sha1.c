@@ -1,5 +1,5 @@
-#ifndef __SHA1_H__
-#define __SHA1_H__
+#ifndef _SHA1_C_
+#define _SHA1_C_
 
 #include <stdint.h>
 #include <stdlib.h>

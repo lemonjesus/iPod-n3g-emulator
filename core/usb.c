@@ -1,5 +1,5 @@
-#ifndef __USB_H__
-#define __USB_H__
+#ifndef _USB_C_
+#define _USB_C_
 
 #include <stdint.h>
 #include <stdlib.h>

@@ -1,7 +1,7 @@
 // Interupt controllers of the S5L8702
 
-#ifndef __INTERRUPT_CONTROLLERS_H__
-#define __INTERRUPT_CONTROLLERS_H__
+#ifndef _INTERRUPT_CONTROLLERS_C_
+#define _INTERRUPT_CONTROLLERS_C_
 
 #include <stdint.h>
 #include <stdlib.h>

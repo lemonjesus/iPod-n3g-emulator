@@ -1,5 +1,5 @@
-#ifndef __GPIO_H__
-#define __GPIO_H__
+#ifndef _GPIO_C_
+#define _GPIO_C_
 
 #include <stdint.h>
 #include <stdlib.h>

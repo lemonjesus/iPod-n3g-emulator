@@ -1,5 +1,5 @@
-#ifndef __AES_H__
-#define __AES_H__
+#ifndef _AES_C_
+#define _AES_C_
 
 #include <stdint.h>
 #include <stdlib.h>
