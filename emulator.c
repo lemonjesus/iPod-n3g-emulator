@@ -21,6 +21,9 @@
 #include "core/usb.c"
 #include "core/watchdog.c"
 
+#include "paravirtualization/pv.h"
+#include "paravirtualization/nor_flash_loader.c"
+
 #define ROUND_UP(N, S) ((((N) + (S) - 1) / (S)) * (S))
 
 char* disasm_buffer = NULL;
@@ -28,8 +31,18 @@ char* disasm_buffer = NULL;
 static void hook_code(uc_engine* uc, uint32_t address, uint32_t size, void* user_data) {
     disassemble(uc, address, size, disasm_buffer);
     log_trace(">>> Tracing instruction at 0x%x instruction = %s", address, disasm_buffer);
-    if(address == 0x2000352c) {
-        log_error("verify_decrypt_image has failed!");
+    if(address == 0x200006d0) {
+        log_error("verify_img_header has failed!");
+        exit(1);
+    }
+
+    if(address == 0x20003758) {
+        log_error("something has failed and the iPod is waiting in a USB DFU loop! Exiting.");
+        exit(1);
+    }
+
+    if(address == 0x200034a0) {
+        log_info("entering prepare jump!");
     }
 }
 
@@ -56,6 +69,18 @@ int main(int argc, char **argv) {
 
     fread(memory, fsize, 1, f);
     fclose(f);
+
+    // PATCHES
+    // 1. do not verify the image header, just assume it's good to go (immediately return 1 from verify_img_header)
+    ((uint32_t*)memory)[0x5dc/4] = 0xE3a00001;
+    ((uint32_t*)memory)[0x5e0/4] = 0xE12FFF1E;
+    
+    // 2. do the same for verify_decrypt_image (it's already decrypted off of NOR)
+    ((uint32_t*)memory)[0x6dc/4] = 0xE3a00001;
+    ((uint32_t*)memory)[0x6e0/4] = 0xE12FFF1E;
+
+    // 3. ignore other issues in the header format
+    ((uint32_t*)memory)[0x3098/4] = 0xE320F000;
 
     // map the memory at 0x0
     err = uc_mem_map_ptr(uc, 0x0, 2 * 1024 * 1024, UC_PROT_ALL, memory);
@@ -110,6 +135,16 @@ int main(int argc, char **argv) {
         }
 
         log_info("Loaded %s at 0x%x", peripherals[i].name, peripherals[i].address);
+    }
+
+    // initialize paravirtualization
+    PV paravirtualizers[] = {
+        nor_flash_loader
+    };
+
+    for(int i = 0; i < sizeof(paravirtualizers) / sizeof(paravirtualizers[0]); i++) {
+        err = uc_hook_add(uc, &paravirtualizers[i].hook, UC_HOOK_CODE, paravirtualizers[i].execute, &paravirtualizers[i], paravirtualizers[i].hook_address, paravirtualizers[i].hook_address);
+        log_info("Loaded %s", paravirtualizers[i].name);
     }
 
     // start emulation at 0x0

@@ -67,12 +67,12 @@ static void spi_reigon_write(uc_engine* uc, uc_mem_type type, uint32_t address, 
     // possibly starts the SPI clock?
     if(spi->SPICTRL == 1 && !meta->prepared) {
         meta->prepared = true;
-        log_info("SPI %d has been prepared", meta->port);
+        log_debug("SPI %d has been prepared", meta->port);
     }
 
     // acknowledge change in RXLIMIT?
     if(spi->SPIRXLIMIT == 1 && (address - self->address) == 0x20) {
-        log_info("SPI %d is preparing to write data", meta->port);
+        log_debug("SPI %d is preparing to write data", meta->port);
         spi->SPISTATUS = 0x100;
     }
 

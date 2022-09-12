@@ -26,10 +26,10 @@ int norboot_init(void* dev) {
     meta->content = calloc(1, 0x100000);
     meta->content_buffer_index = 0;
 
-    // load efi.bin into norflash at 0x8000
-    FILE* efi = fopen("efi.bin", "rb");
+    // load efi_full.bin into norflash at 0x8000
+    FILE* efi = fopen("efi_full.bin", "rb");
     if(efi == NULL) {
-        log_error("Failed to open efi.bin");
+        log_error("Failed to open efi_full.bin");
         return -1;
     }
     fseek(efi, 0, SEEK_END);
@@ -38,11 +38,24 @@ int norboot_init(void* dev) {
     fread(meta->content + 0x8000, fsize, 1, efi);
     fclose(efi);
 
+    // load decrypted efi.bin into norflash at 0x8800 (after im3 header)
+    efi = fopen("efi.bin", "rb");
+    if(efi == NULL) {
+        log_error("Failed to open efi.bin");
+        return -1;
+    }
+    fseek(efi, 0, SEEK_END);
+    fsize = ftell(efi);
+    fseek(efi, 0, SEEK_SET);
+    fread(meta->content + 0x8800, fsize, 1, efi);
+    fclose(efi);
+
     log_info("NORBOOT device initialized");
 }
 
 uint8_t norboot_read(void* self) {
     norflash_meta_t* meta = ((spidev_t*)self)->meta;
+    log_debug("NORBOOT read 0x%02x: 0x%02x",meta->cmd_buffer_index, meta->content[meta->content_buffer_index]);
     return meta->content[meta->content_buffer_index++];
 }
 

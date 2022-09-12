@@ -4,7 +4,7 @@ all: disassembler.o emulator.o log.o
 disassembler.o: disassembler.c
 	gcc -g -c -o disassembler.o disassembler.c -lcapstone
 
-emulator.o: emulator.c core/* devices/*
+emulator.o: emulator.c core/* devices/* paravirtualization/*
 	gcc -g -c -o emulator.o emulator.c -lunicorn
 
 log.o: log.c log.h

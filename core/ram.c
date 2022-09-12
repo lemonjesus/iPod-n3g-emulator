@@ -14,7 +14,7 @@ Peripheral dram = {
 Peripheral iram = {
     .name = "IRAM",
     .address = 0x22000000,
-    .size = 0x20000 * 2,
+    .size = 0x200000 * 2,
 };
 
 #endif

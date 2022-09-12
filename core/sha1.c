@@ -214,11 +214,9 @@ static void sha1_config(uc_engine* uc, uc_mem_type type, uint32_t address, int s
 
     if (value & 2) {
         SHA1Update(&meta->ctx, sha1->SHA1DATAIN, 64);
-        sha1->SHA1CONFIG = 0;
-    }
-
-    if (value & 8) {
-        SHA1Final((uint8_t*)sha1->SHA1RESULT, &meta->ctx);
+        log_trace("SHA1: Updated with data: 0x%08x%08x%08x%08x", ((uint32_t*)sha1->SHA1DATAIN)[0], ((uint32_t*)sha1->SHA1DATAIN)[1], ((uint32_t*)sha1->SHA1DATAIN)[2], ((uint32_t*)sha1->SHA1DATAIN)[3]);
+        memcpy(sha1->SHA1RESULT, meta->ctx.state, 20);
+        log_trace("SHA1 Update: %08x%08x%08x%08x%08x", sha1->SHA1RESULT[0], sha1->SHA1RESULT[1], sha1->SHA1RESULT[2], sha1->SHA1RESULT[3], sha1->SHA1RESULT[4]);
         sha1->SHA1CONFIG = 0;
     }
 }
