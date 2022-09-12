@@ -27,7 +27,7 @@ char* disasm_buffer = NULL;
 
 static void hook_code(uc_engine* uc, uint32_t address, uint32_t size, void* user_data) {
   disassemble(uc, address, size, disasm_buffer);
-  // log_trace(">>> Tracing instruction at 0x%x instruction = %s", address, disasm_buffer);
+  log_trace(">>> Tracing instruction at 0x%x instruction = %s", address, disasm_buffer);
 }
 
 int main(int argc, char **argv) {
@@ -69,8 +69,8 @@ int main(int argc, char **argv) {
   }
 
   // hook code
-  uc_hook trace1;
-  err = uc_hook_add(uc, &trace1, UC_HOOK_CODE, hook_code, NULL, 0, 0x40000000);
+  uc_hook instruction_trace;
+  err = uc_hook_add(uc, &instruction_trace, UC_HOOK_CODE, hook_code, NULL, 0, 0x40000000);
 
   Peripheral peripherals[] = {
     aes,

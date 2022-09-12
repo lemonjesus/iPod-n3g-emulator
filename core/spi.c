@@ -40,6 +40,13 @@ static void spi_reigon_read(uc_engine* uc, uc_mem_type type, uint32_t address, i
         log_trace("SPI %d Reigon Read 0x%x @ PC = 0x%x", meta->port, address, pc);
         log_trace("SPICTRL: 0x%X, SPISETUP: 0x%X, SPISTATUS: 0x%X, SPIPIN: 0x%X, SPITXDATA: 0x%X, SPIRXDATA: 0x%X, SPICLKDIV: 0x%X, SPIRXLIMIT: 0x%X, SPIDD: 0x%X", spi->SPICTRL, spi->SPISETUP, spi->SPISTATUS, spi->SPIPIN, spi->SPITXDATA, spi->SPIRXDATA, spi->SPICLKDIV, spi->SPIRXLIMIT, spi->SPIDD);
     }
+
+    if((spi->SPISETUP | 1) && (address - self->address) == 0x08) {
+        if(meta->device->read != NULL) {
+            spi->SPIRXDATA = meta->device->read(meta->device);
+            spi->SPISTATUS = 0x3800;
+        }
+    }
 }
 
 static void spi_reigon_write(uc_engine* uc, uc_mem_type type, uint32_t address, int size, uint32_t value, void* user_data) {
@@ -79,64 +86,6 @@ static void spi_reigon_write(uc_engine* uc, uc_mem_type type, uint32_t address, 
         meta->is_writing = false;
     }
 }
-
-// void bootflash_read(int port, uint32_t addr, uint32_t size, void* buf)
-// {
-//     spi_prepare(port);
-//     bootflash_wait_ready(port);
-//     bootflash_ce(port, true);
-//     spi_write(port, 3);
-//     spi_write(port, (addr >> 16) & 0xff);
-//     spi_write(port, (addr >> 8) & 0xff);
-//     spi_write(port, addr & 0xff);
-//     spi_read(port, size, buf);
-//     bootflash_ce(port, false);
-//     spi_release(port);
-// }
-// static void bootflash_wait_ready(int port)
-// {
-//     while (true)
-//     {
-//         bootflash_ce(port, true);
-//         spi_write(port, 5);
-//         if (!(spi_write(port, 0xff) & 1)) break;
-//         bootflash_ce(port, false);
-//     }
-//     bootflash_ce(port, false);
-// }
-// uint32_t spi_write(int port, uint32_t data)
-// {
-//     SPIRXLIMIT(port) = 1;
-//     while ((SPISTATUS(port) & 0x1f0) == 0x100);
-//     SPITXDATA(port) = data;
-//     while (!(SPISTATUS(port) & 0x3e00));
-//     return SPIRXDATA(port);
-// }
-// void spi_prepare(int port)
-// {
-//     clockgate_enable(SPICLKGATE(port), true);
-//     SPISTATUS(port) = 0xf;
-//     SPICTRL(port) |= 0xc;
-//     SPICLKDIV(port) = clkdiv[port];
-//     SPIPIN(port) = 6;
-//     SPISETUP(port) = 0x10618;
-//     SPICTRL(port) |= 0xc;
-//     SPICTRL(port) = 1;
-// }
-// void spi_read(int port, uint32_t size, void* buf)
-// {
-//     uint8_t* buffer = (uint8_t*)buf;
-
-//     SPIRXLIMIT(port) = size;
-//     SPISETUP(port) |= 1;
-//     while (size--)
-//     {
-//         while (!(SPISTATUS(port) & 0x3e00));
-//         *buffer++ = SPIRXDATA(port);
-//     }
-//     SPISETUP(port) &= ~1;
-// }
-
 
 int spi_init(uc_engine* uc, void* data) {
     Peripheral* self = (Peripheral*)data;
