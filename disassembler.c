@@ -9,7 +9,10 @@ void disassemble(uc_engine* uc, uint32_t addr, uint32_t size, char* out) {
     cs_insn *insn;
     size_t count;
 
-    if (cs_open(CS_ARCH_ARM, CS_MODE_ARM, &handle) != CS_ERR_OK) {
+    uint32_t cpsr;
+    uc_reg_read(uc, UC_ARM_REG_CPSR, &cpsr);
+
+    if (cs_open(CS_ARCH_ARM, (cpsr & 0x20 ? CS_MODE_THUMB : CS_MODE_ARM), &handle) != CS_ERR_OK) {
         log_error("failed on cs_open(), quit");
     }
 
@@ -24,7 +27,7 @@ void disassemble(uc_engine* uc, uint32_t addr, uint32_t size, char* out) {
         }
         cs_free(insn, count);
     } else {
-        log_error("Failed to disassemble given code!");
+        log_error("Failed to disassemble given code! 0x%X %d",*(uint32_t*)bytes, size);
     }
 
     free(bytes);

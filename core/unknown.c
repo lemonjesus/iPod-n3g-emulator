@@ -11,4 +11,10 @@ Peripheral unknown1 = {
     .size = 4*1024,
 };
 
+Peripheral unknown2 = {
+    .name = "Unknown Peripheral 2",
+    .address = 0x38501000,
+    .size = 4*1024,
+};
+
 #endif

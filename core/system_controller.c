@@ -34,7 +34,7 @@ typedef struct  {
 } system_controller_t;
 
 static void pll_lock(uc_engine* uc, uc_mem_type type, uint64_t address, int size, int64_t value, void* user_data) {
-    uint32_t pll_locked = 1;
+    uint32_t pll_locked = 0xFFFFFFFF;
     uc_mem_write(uc, 0x3C500040, &pll_locked, sizeof(uint32_t));
 }
 

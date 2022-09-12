@@ -11,12 +11,14 @@
 #include "core/aes.c"
 #include "core/chipid.c"
 #include "core/dma.c"
-#include "core/interrupt_controllers.c"
 #include "core/gpio.c"
+#include "core/i2c.c"
+#include "core/interrupt_controllers.c"
 #include "core/ram.c"
 #include "core/sha1.c"
 #include "core/spi.c"
 #include "core/system_controller.c"
+#include "core/timer.c"
 #include "core/unknown.c"
 #include "core/usb.c"
 #include "core/watchdog.c"
@@ -30,7 +32,7 @@ char* disasm_buffer = NULL;
 
 static void hook_code(uc_engine* uc, uint32_t address, uint32_t size, void* user_data) {
     disassemble(uc, address, size, disasm_buffer);
-    log_trace(">>> Tracing instruction at 0x%x instruction = %s", address, disasm_buffer);
+    if(address >= 0x22000000) log_trace(">>> Tracing instruction at 0x%x instruction = %s", address, disasm_buffer);
     if(address == 0x200006d0) {
         log_error("verify_img_header has failed!");
         exit(1);
@@ -106,13 +108,15 @@ int main(int argc, char **argv) {
         dma0, dma1,
         dram,
         gpio,
+        i2c0, i2c1,
         interrupt_controller,
         iram,
         otgphy,
         sha1,
         spi0, spi1, spi2,
         system_controller,
-        unknown1,
+        timer,
+        unknown1, unknown2,
         usb,
         watchdog
     };
