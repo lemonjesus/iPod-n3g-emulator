@@ -15,12 +15,18 @@ typedef struct  {
     uint8_t _pad2[0x44 - 0x20];
     uint32_t OPHYUNK2; // 0x44
 
-} usb_t;
+} otgphy_t;
+
+Peripheral otgphy = {
+    .name = "OTG PHY",
+    .address = 0x3C400000,
+    .size = sizeof(otgphy_t),
+};
 
 Peripheral usb = {
     .name = "USB",
-    .address = 0x3C400000,
-    .size = sizeof(usb_t),
+    .address = 0x38400000,
+    .size = 0x1000,
 };
 
 #endif

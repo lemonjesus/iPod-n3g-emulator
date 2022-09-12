@@ -10,6 +10,7 @@
 #include "core/peripheral.h"
 #include "core/aes.c"
 #include "core/chipid.c"
+#include "core/dma.c"
 #include "core/interrupt_controllers.c"
 #include "core/gpio.c"
 #include "core/ram.c"
@@ -25,7 +26,6 @@
 char* disasm_buffer = NULL;
 
 static void hook_code(uc_engine* uc, uint32_t address, uint32_t size, void* user_data) {
-  // get the instruction at this location
   disassemble(uc, address, size, disasm_buffer);
   // log_trace(">>> Tracing instruction at 0x%x instruction = %s", address, disasm_buffer);
 }
@@ -75,10 +75,12 @@ int main(int argc, char **argv) {
   Peripheral peripherals[] = {
     aes,
     chipid,
+    dma0, dma1,
     dram,
     gpio,
     interrupt_controller,
     iram,
+    otgphy,
     sha1,
     spi0, spi1, spi2,
     system_controller,
