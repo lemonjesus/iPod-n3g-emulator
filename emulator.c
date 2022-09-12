@@ -27,7 +27,7 @@ char* disasm_buffer = NULL;
 static void hook_code(uc_engine* uc, uint32_t address, uint32_t size, void* user_data) {
   // get the instruction at this location
   disassemble(uc, address, size, disasm_buffer);
-  log_trace(">>> Tracing instruction at 0x%x instruction = %s", address, disasm_buffer);
+  // log_trace(">>> Tracing instruction at 0x%x instruction = %s", address, disasm_buffer);
 }
 
 int main(int argc, char **argv) {
