@@ -36,7 +36,7 @@ char* disasm_buffer = NULL;
 
 static void hook_code(uc_engine* uc, uint32_t address, uint32_t size, void* user_data) {
     disassemble(uc, address, size, disasm_buffer);
-    if(address < 0x20000000) log_trace(">>> Tracing instruction at 0x%x instruction = %s", address, disasm_buffer);
+    log_trace(">>> Tracing instruction at 0x%x instruction = %s", address, disasm_buffer);
     if(address == 0x200006d0) {
         log_error("verify_img_header has failed!");
         exit(1);
@@ -50,13 +50,23 @@ static void hook_code(uc_engine* uc, uint32_t address, uint32_t size, void* user
     if(address == 0x200034a0) {
         log_info("entering prepare jump!");
     }
+
+    if(address == 0x9ef1220) {
+        log_set_level(LOG_TRACE);
+    }
+
+    if(address == 0x9ef133a) {
+        uint32_t r1;
+        uc_reg_read(uc, UC_ARM_REG_R1, &r1);
+        log_trace("r1 = 0x%x", r1);
+    }
 }
 
 int main(int argc, char **argv) {
     uc_engine *uc;
     uc_err err;
 
-    // log_set_level(LOG_DEBUG);
+    log_set_level(LOG_INFO);
     disasm_buffer = malloc(128);
 
     err = uc_open(UC_ARCH_ARM, UC_MODE_ARM, &uc);

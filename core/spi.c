@@ -38,19 +38,25 @@ static void spi_reigon_read(uc_engine* uc, uc_mem_type type, uint32_t address, i
     spi_t* spi = (spi_t*)self->memory;
     spi_meta_t* meta = (spi_meta_t*)self->meta;
 
-    if(meta->prepared) {
-        uint32_t pc;
-        uc_reg_read(uc, UC_ARM_REG_PC, &pc);
-        disassemble(uc, address, size, spi_disasm_buffer);
-        log_trace("SPI %d Reigon Read 0x%x @ PC = 0x%x (%s)", meta->port, address, pc, spi_disasm_buffer);
-        log_trace("SPICTRL: 0x%X, SPISETUP: 0x%X, SPISTATUS: 0x%X, SPIPIN: 0x%X, SPITXDATA: 0x%X, SPIRXDATA: 0x%X, SPICLKDIV: 0x%X, SPIRXLIMIT: 0x%X, SPIDD: 0x%X", spi->SPICTRL, spi->SPISETUP, spi->SPISTATUS, spi->SPIPIN, spi->SPITXDATA, spi->SPIRXDATA, spi->SPICLKDIV, spi->SPIRXLIMIT, spi->SPIDD);
+    uint32_t pc;
+    uc_reg_read(uc, UC_ARM_REG_PC, &pc);
+    disassemble(uc, pc, size, spi_disasm_buffer);
+    log_trace("SPI %d Reigon Read 0x%x @ PC = 0x%x (%s)", meta->port, address, pc, spi_disasm_buffer);
+    log_trace("SPICTRL: 0x%X, SPISETUP: 0x%X, SPISTATUS: 0x%X, SPIPIN: 0x%X, SPITXDATA: 0x%X, SPIRXDATA: 0x%X, SPICLKDIV: 0x%X, SPIRXLIMIT: 0x%X, SPIDD: 0x%X", spi->SPICTRL, spi->SPISETUP, spi->SPISTATUS, spi->SPIPIN, spi->SPITXDATA, spi->SPIRXDATA, spi->SPICLKDIV, spi->SPIRXLIMIT, spi->SPIDD);
+
+    if((address - self->address) == 0x08) {
+        if(spi->SPISETUP & 1) {
+            if(meta->device->read != NULL) {
+                spi->SPIRXDATA = meta->device->read(meta->device);
+                spi->SPISTATUS = 0x3800;
+            }
+        } else {
+            spi->SPISTATUS = 0x100;
+        }
     }
 
-    if((spi->SPISETUP | 1) && (address - self->address) == 0x08) {
-        if(meta->device->read != NULL) {
-            spi->SPIRXDATA = meta->device->read(meta->device);
-            spi->SPISTATUS = 0x3800;
-        }
+    if((address - self->address) == 0x00 && (spi->SPICTRL == 0x0) && !meta->prepared) {
+        spi->SPICTRL = 0x2;
     }
 }
 
@@ -62,11 +68,19 @@ static void spi_reigon_write(uc_engine* uc, uc_mem_type type, uint32_t address, 
     // perform the write for the vm so we can write reasonable code about it below
     ((uint8_t*)self->memory)[address - self->address] = value;
     
-    if(meta->prepared) {
-        uint32_t pc;
-        uc_reg_read(uc, UC_ARM_REG_PC, &pc);
-        log_trace("SPI %d Reigon Write 0x%x = 0x%x @ PC = 0x%x", meta->port, address, value, pc);
-        log_trace("SPICTRL: 0x%X, SPISETUP: 0x%X, SPISTATUS: 0x%X, SPIPIN: 0x%X, SPITXDATA: 0x%X, SPIRXDATA: 0x%X, SPICLKDIV: 0x%X, SPIRXLIMIT: 0x%X, SPIDD: 0x%X", spi->SPICTRL, spi->SPISETUP, spi->SPISTATUS, spi->SPIPIN, spi->SPITXDATA, spi->SPIRXDATA, spi->SPICLKDIV, spi->SPIRXLIMIT, spi->SPIDD);
+    uint32_t pc;
+    uc_reg_read(uc, UC_ARM_REG_PC, &pc);
+    log_trace("SPI %d Reigon Write 0x%x = 0x%x @ PC = 0x%x", meta->port, address, value, pc);
+    log_trace("SPICTRL: 0x%X, SPISETUP: 0x%X, SPISTATUS: 0x%X, SPIPIN: 0x%X, SPITXDATA: 0x%X, SPIRXDATA: 0x%X, SPICLKDIV: 0x%X, SPIRXLIMIT: 0x%X, SPIDD: 0x%X", spi->SPICTRL, spi->SPISETUP, spi->SPISTATUS, spi->SPIPIN, spi->SPITXDATA, spi->SPIRXDATA, spi->SPICLKDIV, spi->SPIRXLIMIT, spi->SPIDD);
+
+    if(spi->SPICTRL == 0 && (address - self->address) == 0x0) {
+        spi->SPICTRL = 0x2;
+        meta->prepared = false;
+        log_debug("SPI %d Unprepared", meta->port);
+    }
+
+    if(spi->SPICTRL & 0xC && (address - self->address) == 0x0) {
+        spi->SPISTATUS = 0x0;
     }
 
     // possibly starts the SPI clock?
