@@ -36,7 +36,9 @@ char* disasm_buffer = NULL;
 
 static void hook_code(uc_engine* uc, uint32_t address, uint32_t size, void* user_data) {
     disassemble(uc, address, size, disasm_buffer);
-    log_trace(">>> Tracing instruction at 0x%x instruction = %s", address, disasm_buffer);
+    uint32_t instruction = 0;
+    uc_mem_read(uc, address, &instruction, size);
+    log_trace(">>> Tracing instruction at 0x%x instruction = %s (0x%08X)", address, disasm_buffer, instruction);
     if(address == 0x200006d0) {
         log_error("verify_img_header has failed!");
         exit(1);
@@ -48,11 +50,11 @@ static void hook_code(uc_engine* uc, uint32_t address, uint32_t size, void* user
     }
 
     if(address == 0x200034a0) {
-        log_info("entering prepare jump!");
+        log_info("entering the EFI!");
     }
 
     if(address == 0x9ef1220) {
-        log_set_level(LOG_TRACE);
+        // log_set_level(LOG_TRACE);
     }
 
     if(address == 0x9ef133a) {
@@ -174,10 +176,11 @@ int main(int argc, char **argv) {
   
     if (err) {
         log_fatal("Failed on uc_emu_start() with error returned: %u (%s)", err, uc_strerror(err));
-        uint32_t pc;
+        uint32_t pc, instruction;
         uc_reg_read(uc, UC_ARM_REG_PC, &pc);
         disassemble(uc, pc, 4, disasm_buffer);
-        log_fatal("PC = 0x%x, inst = %s", pc, disasm_buffer);
+        uc_mem_read(uc, pc, &instruction, 4);
+        log_fatal("PC = 0x%x, inst = %s (0x%8X)", pc, disasm_buffer, instruction);
 
         // read all registers and print them
         uint32_t registers[16];

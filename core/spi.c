@@ -51,7 +51,7 @@ static void spi_reigon_read(uc_engine* uc, uc_mem_type type, uint32_t address, i
                 spi->SPISTATUS = 0x3800;
             }
         } else {
-            spi->SPISTATUS = 0x100;
+            // spi->SPISTATUS = spi->SPIRXLIMIT == 0x1 ? 0x00 : 0x100;
         }
     }
 
@@ -87,6 +87,13 @@ static void spi_reigon_write(uc_engine* uc, uc_mem_type type, uint32_t address, 
     if(spi->SPICTRL == 1 && !meta->prepared) {
         meta->prepared = true;
         log_debug("SPI %d has been prepared", meta->port);
+    }
+
+    if(spi->SPICTRL == 0xd && (address - self->address) == 0x0) {
+        spi->SPISTATUS = 0x0;
+        spi->SPICTRL = 0x0;
+        meta->prepared = false;
+        log_debug("SPI %d Unprepared", meta->port);
     }
 
     // acknowledge change in RXLIMIT?
