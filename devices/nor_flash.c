@@ -26,14 +26,29 @@ int norboot_init(void* dev) {
     meta->content = calloc(1, 0x100000);
     meta->content_buffer_index = 0;
 
+    // load nor_image.bin into norflash at 0x8000
+    FILE* efi = fopen("nor_image.bin", "rb");
+    if(efi == NULL) {
+        log_error("Failed to open nor_image.bin");
+        return -1;
+    }
+    fseek(efi, 0, SEEK_END);
+    long fsize = ftell(efi);
+    fseek(efi, 0, SEEK_SET);
+    fread(meta->content, fsize, 1, efi);
+    fclose(efi);
+
     // load efi_full.bin into norflash at 0x8000
-    FILE* efi = fopen("efi_full.bin", "rb");
+    // TODO: this shouldn't be necessary because of the full NOR image which
+    //       bears the header this is being used for, but it doesn't work without
+    //       it. punting for now.
+    efi = fopen("efi_full.bin", "rb");
     if(efi == NULL) {
         log_error("Failed to open efi_full.bin");
         return -1;
     }
     fseek(efi, 0, SEEK_END);
-    long fsize = ftell(efi);
+    fsize = ftell(efi);
     fseek(efi, 0, SEEK_SET);
     fread(meta->content + 0x8000, fsize, 1, efi);
     fclose(efi);

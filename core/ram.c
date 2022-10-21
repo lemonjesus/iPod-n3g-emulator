@@ -8,7 +8,7 @@
 Peripheral dram = {
     .name = "DRAM",
     .address = 0x08000000,
-    .size = 0x100000 * 32,
+    .size = 0x100000 * 64,
 };
 
 Peripheral iram = {

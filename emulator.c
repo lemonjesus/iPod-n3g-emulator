@@ -33,6 +33,7 @@
 #define ROUND_UP(N, S) ((((N) + (S) - 1) / (S)) * (S))
 
 char* disasm_buffer = NULL;
+uint32_t sysconfig;
 
 static void hook_code(uc_engine* uc, uint32_t address, uint32_t size, void* user_data) {
     disassemble(uc, address, size, disasm_buffer);
@@ -53,14 +54,29 @@ static void hook_code(uc_engine* uc, uint32_t address, uint32_t size, void* user
         log_info("entering the EFI!");
     }
 
-    if(address == 0x9ef1220) {
-        // log_set_level(LOG_TRACE);
-    }
-
     if(address == 0x9ef133a) {
         uint32_t r1;
         uc_reg_read(uc, UC_ARM_REG_R1, &r1);
         log_trace("r1 = 0x%x", r1);
+    }
+
+    if(address == 0x9ee0306) {
+        log_set_level(LOG_TRACE);
+        uc_reg_read(uc, UC_ARM_REG_R0, &sysconfig);
+        log_trace("sysconfig = 0x%x", sysconfig);
+    }
+
+    if(address == 0x9ee025c) {
+        uint32_t r0;
+        uc_reg_read(uc, UC_ARM_REG_R0, &r0);
+        log_info("system memory size returning r0 = 0x%x", r0);
+    }
+
+    if(address == 0x9ee0402) {
+        uint32_t r0, r6;
+        uc_reg_read(uc, UC_ARM_REG_R0, &r0);
+        uc_reg_read(uc, UC_ARM_REG_R6, &r6);
+        log_info("r0 = 0x%x r6 = 0x%x", r0, r6);
     }
 }
 
@@ -68,7 +84,7 @@ int main(int argc, char **argv) {
     uc_engine *uc;
     uc_err err;
 
-    log_set_level(LOG_INFO);
+    log_set_level(LOG_TRACE);
     disasm_buffer = malloc(128);
 
     err = uc_open(UC_ARCH_ARM, UC_MODE_ARM, &uc);
@@ -90,11 +106,11 @@ int main(int argc, char **argv) {
 
     // PATCHES
     // 1. do not verify the image header, just assume it's good to go (immediately return 1 from verify_img_header)
-    ((uint32_t*)memory)[0x5dc/4] = 0xE3a00001;
+    ((uint32_t*)memory)[0x5dc/4] = 0xE3A00001;
     ((uint32_t*)memory)[0x5e0/4] = 0xE12FFF1E;
     
     // 2. do the same for verify_decrypt_image (it's already decrypted off of NOR)
-    ((uint32_t*)memory)[0x6dc/4] = 0xE3a00001;
+    ((uint32_t*)memory)[0x6dc/4] = 0xE3A00001;
     ((uint32_t*)memory)[0x6e0/4] = 0xE12FFF1E;
 
     // 3. ignore other issues in the header format
