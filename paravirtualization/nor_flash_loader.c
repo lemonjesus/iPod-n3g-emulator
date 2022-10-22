@@ -8,7 +8,7 @@
 #include "pv.h"
 #include "../devices/nor_flash.c"
 
-int nor_flash_loader_execute(uc_engine* uc) {
+int nor_flash_loader_execute(uc_engine* uc, uint32_t _address, uint32_t _size, void* _user_data) {
     uint32_t size; // r1
     uint32_t dest; // r2
     uint32_t src; // r3
