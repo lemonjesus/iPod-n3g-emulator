@@ -4,6 +4,7 @@
 
 #include <unicorn/unicorn.h>
 
+#include "arguments.h"
 #include "disassembler.h"
 #include "log.h"
 
@@ -84,7 +85,13 @@ int main(int argc, char **argv) {
     uc_engine *uc;
     uc_err err;
 
-    log_set_level(LOG_TRACE);
+    Arguments arguments;
+    arguments.log_level = LOG_INFO;
+
+    static struct argp argp = {options, parse_opt, NULL, doc};
+    argp_parse(&argp, argc, argv, 0, 0, &arguments);
+
+    log_set_level(arguments.log_level);
     disasm_buffer = malloc(128);
 
     err = uc_open(UC_ARCH_ARM, UC_MODE_ARM, &uc);
@@ -188,6 +195,7 @@ int main(int argc, char **argv) {
     }
 
     // start emulation at 0x0
+    printf("Starting emulation\n");
     err = uc_emu_start(uc, 0x0, 0x40000000, 0, 0);
   
     if (err) {

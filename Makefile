@@ -1,5 +1,8 @@
-all: disassembler.o emulator.o log.o
-	gcc -g -o emulator disassembler.o emulator.o log.o -lunicorn -lcapstone
+all: arguments.o disassembler.o emulator.o log.o
+	gcc -g -o emulator *.o -lunicorn -lcapstone
+
+arguments.o: arguments.c arguments.h
+	gcc -g -c -o arguments.o arguments.c
 
 disassembler.o: disassembler.c
 	gcc -g -c -o disassembler.o disassembler.c -lcapstone
