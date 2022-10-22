@@ -1,10 +1,12 @@
 #include <stdio.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include <unicorn/unicorn.h>
 
 #include "arguments.h"
+#include "debugger.h"
 #include "disassembler.h"
 #include "log.h"
 
@@ -33,56 +35,8 @@
 
 #define ROUND_UP(N, S) ((((N) + (S) - 1) / (S)) * (S))
 
-char* disasm_buffer = NULL;
-uint32_t sysconfig;
-
-static void hook_code(uc_engine* uc, uint32_t address, uint32_t size, void* user_data) {
-    disassemble(uc, address, size, disasm_buffer);
-    uint32_t instruction = 0;
-    uc_mem_read(uc, address, &instruction, size);
-    log_trace(">>> Tracing instruction at 0x%x instruction = %s (0x%08X)", address, disasm_buffer, instruction);
-    if(address == 0x200006d0) {
-        log_error("verify_img_header has failed!");
-        exit(1);
-    }
-
-    if(address == 0x20003758) {
-        log_error("something has failed and the iPod is waiting in a USB DFU loop! Exiting.");
-        exit(1);
-    }
-
-    if(address == 0x200034a0) {
-        log_info("entering the EFI!");
-    }
-
-    if(address == 0x9ef133a) {
-        uint32_t r1;
-        uc_reg_read(uc, UC_ARM_REG_R1, &r1);
-        log_trace("r1 = 0x%x", r1);
-    }
-
-    if(address == 0x9ee0306) {
-        log_set_level(LOG_TRACE);
-        uc_reg_read(uc, UC_ARM_REG_R0, &sysconfig);
-        log_trace("sysconfig = 0x%x", sysconfig);
-    }
-
-    if(address == 0x9ee025c) {
-        uint32_t r0;
-        uc_reg_read(uc, UC_ARM_REG_R0, &r0);
-        log_info("system memory size returning r0 = 0x%x", r0);
-    }
-
-    if(address == 0x9ee0402) {
-        uint32_t r0, r6;
-        uc_reg_read(uc, UC_ARM_REG_R0, &r0);
-        uc_reg_read(uc, UC_ARM_REG_R6, &r6);
-        log_info("r0 = 0x%x r6 = 0x%x", r0, r6);
-    }
-}
-
 int main(int argc, char **argv) {
-    uc_engine *uc;
+    uc_engine* uc;
     uc_err err;
 
     Arguments arguments;
@@ -92,7 +46,6 @@ int main(int argc, char **argv) {
     argp_parse(&argp, argc, argv, 0, 0, &arguments);
 
     log_set_level(arguments.log_level);
-    disasm_buffer = malloc(128);
 
     err = uc_open(UC_ARCH_ARM, UC_MODE_ARM, &uc);
     if (err) {
@@ -137,9 +90,7 @@ int main(int argc, char **argv) {
         return -1;
     }
 
-     // hook code
-    uc_hook instruction_trace;
-    err = uc_hook_add(uc, &instruction_trace, UC_HOOK_CODE, hook_code, NULL, 0, 0x40000000);
+    debugger_init(uc);
 
     Peripheral peripherals[] = {
         aes,
@@ -199,12 +150,13 @@ int main(int argc, char **argv) {
     err = uc_emu_start(uc, 0x0, 0x40000000, 0, 0);
   
     if (err) {
+        char* inst_dump = malloc(128);
         log_fatal("Failed on uc_emu_start() with error returned: %u (%s)", err, uc_strerror(err));
         uint32_t pc, instruction;
         uc_reg_read(uc, UC_ARM_REG_PC, &pc);
-        disassemble(uc, pc, 4, disasm_buffer);
+        disassemble(uc, pc, 4, inst_dump);
         uc_mem_read(uc, pc, &instruction, 4);
-        log_fatal("PC = 0x%x, inst = %s (0x%8X)", pc, disasm_buffer, instruction);
+        log_fatal("PC = 0x%x, inst = %s (0x%8X)", pc, inst_dump, instruction);
 
         // read all registers and print them
         uint32_t registers[16];

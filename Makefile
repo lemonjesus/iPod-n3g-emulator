@@ -1,10 +1,13 @@
-all: arguments.o disassembler.o emulator.o log.o
+all: arguments.o debugger.o disassembler.o emulator.o log.o
 	gcc -g -o emulator *.o -lunicorn -lcapstone
 
 arguments.o: arguments.c arguments.h
 	gcc -g -c -o arguments.o arguments.c
 
-disassembler.o: disassembler.c
+debugger.o: debugger.c debugger.h
+	gcc -g -c -o debugger.o debugger.c -lcapstone -lunicorn
+
+disassembler.o: disassembler.c disassembler.h
 	gcc -g -c -o disassembler.o disassembler.c -lcapstone
 
 emulator.o: emulator.c core/* devices/* paravirtualization/*
