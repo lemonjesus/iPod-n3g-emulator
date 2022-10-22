@@ -39,13 +39,14 @@ int main(int argc, char **argv) {
     uc_engine* uc;
     uc_err err;
 
-    Arguments arguments;
-    arguments.log_level = LOG_INFO;
+    Arguments args;
+    args.breakpoint_count = 0;
+    args.log_level = LOG_INFO;
 
     static struct argp argp = {options, parse_opt, NULL, doc};
-    argp_parse(&argp, argc, argv, 0, 0, &arguments);
+    argp_parse(&argp, argc, argv, 0, 0, &args);
 
-    log_set_level(arguments.log_level);
+    log_set_level(args.log_level);
 
     err = uc_open(UC_ARCH_ARM, UC_MODE_ARM, &uc);
     if (err) {
@@ -90,7 +91,7 @@ int main(int argc, char **argv) {
         return -1;
     }
 
-    debugger_init(uc);
+    debugger_init(uc, &args);
 
     Peripheral peripherals[] = {
         aes,

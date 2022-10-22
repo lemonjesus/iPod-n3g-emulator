@@ -3,6 +3,7 @@
 
 #include <unicorn/unicorn.h>
 
+#include "arguments.h"
 #include "debugger.h"
 #include "disassembler.h"
 #include "log.h"
@@ -10,7 +11,13 @@
 char* disasm_buffer;
 uc_hook instruction_trace;
 
-int debugger_init(uc_engine* uc) {
+uint32_t* breakpoints;
+uint32_t breakpoint_count;
+
+int debugger_init(uc_engine* uc, Arguments* args) {
+    breakpoints = args->breakpoints;
+    breakpoint_count = args->breakpoint_count;
+
     disasm_buffer = malloc(128);
 
     uc_err err = uc_hook_add(uc, &instruction_trace, UC_HOOK_CODE, hook_code, NULL, 0, 0x40000000);
@@ -66,5 +73,12 @@ void hook_code(uc_engine* uc, uint32_t address, uint32_t size, void* user_data) 
         uc_reg_read(uc, UC_ARM_REG_R0, &r0);
         uc_reg_read(uc, UC_ARM_REG_R6, &r6);
         log_info("r0 = 0x%x r6 = 0x%x", r0, r6);
+    }
+
+    for(int i = 0; i < breakpoint_count; i++) {
+        if(address == breakpoints[i]) {
+            uc_emu_stop(uc);
+            log_debug("Hit Breakpoint %d", i);
+        }
     }
 }
