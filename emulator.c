@@ -148,7 +148,11 @@ int main(int argc, char **argv) {
 
     // start emulation at 0x0
     printf("Starting emulation\n");
-    err = uc_emu_start(uc, 0x0, 0x40000000, 0, 0);
+    start_emulation(uc, 0x0, 0);
+}
+
+void start_emulation(uc_engine* uc, uint32_t start, uint32_t count) {
+    uc_err err = uc_emu_start(uc, start, 0x40000000, 0, count);
   
     if (err) {
         char* inst_dump = malloc(128);
