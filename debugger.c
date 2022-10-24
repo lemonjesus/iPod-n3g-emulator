@@ -104,6 +104,14 @@ void dump_state(uc_engine* uc, uint32_t size) {
     printf("R8 = 0x%x\tR9 = 0x%x\tR10 = 0x%x\tR11 = 0x%x\tR12 = 0x%x\tR13 = 0x%x\tR14 = 0x%x\tR15 = 0x%x\n", registers[8], registers[9], registers[10], registers[11], registers[12], registers[13], registers[14], registers[15]);
 }
 
+char* printable_memdump(uint8_t* buffer, int offset, char* out) {
+    for(int i = 0; i < 16; i++) {
+        out[i] = isprint(buffer[i + offset]) ? buffer[i + offset] : '.';
+    }
+    out[16] = 0;
+    return out;
+}
+
 void debug(uc_engine* uc, uint32_t address, uint32_t size, void* user_data) {
     if(debugging) return;
     debugging = 1;
@@ -111,6 +119,8 @@ void debug(uc_engine* uc, uint32_t address, uint32_t size, void* user_data) {
     rl_bind_key('\t', rl_insert);
 
     char* input;
+    uint32_t addr_arg_buf;
+    uint8_t* buffer = (uint8_t*)malloc(128);
 
     printf("DEBUGGER!\n");
 
@@ -121,7 +131,6 @@ void debug(uc_engine* uc, uint32_t address, uint32_t size, void* user_data) {
 
     while(true) {
         input = readline("> ");
-
         if(input == NULL) goto cleanup;
 
         if (strlen(input) > 0) {
@@ -137,11 +146,26 @@ void debug(uc_engine* uc, uint32_t address, uint32_t size, void* user_data) {
                 break;
             case 'h':
                 printf("h - print this help\n");
+                printf("m <address> - read value at address\n");
                 printf("n - next instruction\n");
+                break;
+            case 'm':
+                sscanf(input + 2, "0x%x", &addr_arg_buf);
+                uc_err err = uc_mem_read(uc, addr_arg_buf, buffer, 128);
+                char out[17];
+                for(int i = 0; i < 8; i++) {
+                    printf("0x%08X | %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X %02X | %s\n", addr_arg_buf + i*16,
+                        buffer[0+i*16], buffer[1+i*16], buffer[2+i*16], buffer[3+i*16], buffer[4+i*16], buffer[5+i*16], buffer[6+i*16], buffer[7+i*16],
+                        buffer[8+i*16], buffer[9+i*16], buffer[10+i*16], buffer[11+i*16], buffer[12+i*16], buffer[13+i*16], buffer[14+i*16], buffer[15+i*16],
+                        printable_memdump(buffer, i*16, out));
+                }
                 break;
             case 'n':
                 start_emulation(uc, pc + size, 1);
                 uc_reg_read(uc, UC_ARM_REG_PC, &pc);
+                break;
+            default:
+                printf("unknown command %c\n", input[0]);
                 break;
         }
     }
