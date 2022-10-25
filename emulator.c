@@ -151,7 +151,7 @@ int main(int argc, char **argv) {
     start_emulation(uc, 0x0, 0);
 }
 
-void start_emulation(uc_engine* uc, uint32_t start, uint32_t count) {
+int start_emulation(uc_engine* uc, uint32_t start, uint32_t count) {
     uc_err err = uc_emu_start(uc, start, 0x40000000, 0, count);
   
     if (err) {
@@ -168,7 +168,8 @@ void start_emulation(uc_engine* uc, uint32_t start, uint32_t count) {
         for (int i = 0; i < 16; i++) {
             uc_reg_read(uc, UC_ARM_REG_R0 + i, &registers[i]);
         }
-        log_fatal("R0 = 0x%x, R1 = 0x%x, R2 = 0x%x, R3 = 0x%x, R4 = 0x%x, R5 = 0x%x, R6 = 0x%x, R7 = 0x%x, R8 = 0x%x, R9 = 0x%x, R10 = 0x%x, R11 = 0x%x, R12 = 0x%x, R13 = 0x%x, R14 = 0x%x, R15 = 0x%x", registers[0], registers[1], registers[2], registers[3], registers[4], registers[5], registers[6], registers[7], registers[8], registers[9], registers[10], registers[11], registers[12], registers[13], registers[14], registers[15]);
+        log_fatal("R0 = 0x%x\tR1 = 0x%x\tR2 = 0x%x\tR3 = 0x%x\tR4 = 0x%x\tR5 = 0x%x\tR6 = 0x%x\tR7 = 0x%x", registers[0], registers[1], registers[2], registers[3], registers[4], registers[5], registers[6], registers[7]);
+        log_fatal("R8 = 0x%x\tSB = 0x%x\tSL = 0x%x\tFP = 0x%x\tIP = 0x%x\tSP = 0x%x\tLR = 0x%x\tPC = 0x%x", registers[8], registers[9], registers[10], registers[11], registers[12], registers[13], registers[14], registers[15]);
 
         return -1;
     }
