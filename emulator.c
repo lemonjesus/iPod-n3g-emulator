@@ -1,3 +1,4 @@
+#include <signal.h>
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -35,7 +36,15 @@
 
 #define ROUND_UP(N, S) ((((N) + (S) - 1) / (S)) * (S))
 
+int keepRunning = 1;
+
+void intHandler(int dummy) {
+    keepRunning = 0;
+}
+
 int main(int argc, char **argv) {
+    signal(SIGQUIT, intHandler);
+
     uc_engine* uc;
     uc_err err;
 
@@ -152,16 +161,30 @@ int main(int argc, char **argv) {
 }
 
 int start_emulation(uc_engine* uc, uint32_t start, uint32_t count) {
+    keepRunning = 1;
+
+    uint32_t pc, instruction, cpsr;
+    uc_reg_read(uc, UC_ARM_REG_CPSR, &cpsr);
+    uint32_t size = (cpsr & 0x20) ? 2 : 4;
+    log_fatal("CPU is in %s mode", (cpsr & 0x20) ? "THUMB" : "ARM");
+
+    start |= (cpsr & 0x20) >> 5;
+
     uc_err err = uc_emu_start(uc, start, 0x40000000, 0, count);
   
     if (err) {
         char* inst_dump = malloc(128);
         log_fatal("Failed on uc_emu_start() with error returned: %u (%s)", err, uc_strerror(err));
-        uint32_t pc, instruction;
         uc_reg_read(uc, UC_ARM_REG_PC, &pc);
-        disassemble(uc, pc, 4, inst_dump);
-        uc_mem_read(uc, pc, &instruction, 4);
-        log_fatal("PC = 0x%x, inst = %s (0x%8X)", pc, inst_dump, instruction);
+
+        uc_reg_read(uc, UC_ARM_REG_CPSR, &cpsr);
+        uint32_t size = (cpsr & 0x20) ? 2 : 4;
+
+        log_fatal("CPU was in %s mode", (cpsr & 0x20) ? "THUMB" : "ARM");
+
+        disassemble(uc, pc, size, inst_dump);
+        uc_mem_read(uc, pc, &instruction, size);
+        log_fatal("PC = 0x%x, inst = %s (0x%8X)", pc, inst_dump, ((cpsr & 0x20) ? instruction & 0xFFFF : instruction));
 
         // read all registers and print them
         uint32_t registers[16];

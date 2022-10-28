@@ -17,6 +17,8 @@ uc_hook instruction_trace;
 uint32_t* breakpoints;
 uint32_t breakpoint_count;
 
+extern int keepRunning;
+
 int debugger_init(uc_engine* uc, Arguments* args) {
     breakpoints = args->breakpoints;
     breakpoint_count = args->breakpoint_count;
@@ -35,9 +37,10 @@ int debugger_init(uc_engine* uc, Arguments* args) {
 
 void hook_code(uc_engine* uc, uint32_t address, uint32_t size, void* user_data) {
     disassemble(uc, address, size, disasm_buffer);
-    uint32_t instruction = 0;
+    uint32_t cpsr, instruction = 0;
     uc_mem_read(uc, address, &instruction, size);
-    log_trace(">>> Tracing instruction at 0x%x instruction = %s (0x%08X)", address, disasm_buffer, instruction);
+    uc_reg_read(uc, UC_ARM_REG_CPSR, &cpsr);
+    log_trace(">>> Tracing %s instruction at 0x%x instruction = %s (0x%08X)",(cpsr & 0x20) ? "THUMB" : "ARM", address, disasm_buffer, instruction);
     if(address == 0x200006d0) {
         log_error("verify_img_header has failed!");
         exit(1);
@@ -78,11 +81,18 @@ void hook_code(uc_engine* uc, uint32_t address, uint32_t size, void* user_data) 
         log_info("r0 = 0x%x r6 = 0x%x", r0, r6);
     }
 
+    if(keepRunning == 0) {
+        uc_emu_stop(uc);
+        log_info("Stopping the emulation");
+        debug(uc, address, size, user_data);
+    }
+
     for(int i = 0; i < breakpoint_count; i++) {
         if(address == breakpoints[i]) {
             uc_emu_stop(uc);
             log_debug("Hit Breakpoint %d", i);
             debug(uc, address, size, user_data);
+            break;
         }
     }
 }
@@ -182,11 +192,13 @@ int debug_memory(uc_engine* uc, uint32_t address, uint32_t size, char** args, in
 }
 
 int debug_registers(uc_engine* uc, uint32_t address, uint32_t size, char** args, int argc) {
-    uint32_t pc, instruction;
+    uint32_t pc, instruction, cpsr;
     uc_reg_read(uc, UC_ARM_REG_PC, &pc);
+    uc_reg_read(uc, UC_ARM_REG_CPSR, &cpsr);
     disassemble(uc, pc, size, disasm_buffer);
     uc_mem_read(uc, pc, &instruction, size);
     printf("PC = 0x%x, inst = %s (0x%8X)\n", pc, disasm_buffer, instruction);
+    printf("CSPR = 0x%08X\n", cpsr);
 
     // read all registers and print them
     uint32_t registers[16];
@@ -242,7 +254,10 @@ void debug(uc_engine* uc, uint32_t address, uint32_t size, void* user_data) {
 
     debug_registers(uc, address, size, NULL, 0);
 
-    uint32_t pc;
+    uint32_t pc, cpsr;
+    uc_reg_read(uc, UC_ARM_REG_CPSR, &cpsr);
+
+    printf("PROCESSOR IS IN %s MODE\n", (cpsr & 0x20) ? "THUMB" : "ARM");
 
     while(true) {
         uc_reg_read(uc, UC_ARM_REG_PC, &pc);
@@ -250,7 +265,9 @@ void debug(uc_engine* uc, uint32_t address, uint32_t size, void* user_data) {
         input = readline("> ");
         if(input == NULL) goto cleanup;
 
-        if (strlen(input) > 0) add_history(input);
+        if (strlen(input) == 0) continue;
+        
+        add_history(input);
 
         char* p = input;
         for( ; *p; ++p) *p = tolower(*p);
@@ -265,7 +282,7 @@ void debug(uc_engine* uc, uint32_t address, uint32_t size, void* user_data) {
         }
 
         int command_count = sizeof(commands) / sizeof(debug_command);
-        int result = -1;
+        int result = -2;
 
         for(int i = 0; i < command_count; i++) {
             if(strcmp(args[0], commands[i].name) == 0 || args[0][0] == commands[i].abbreviation) {
@@ -285,5 +302,6 @@ void debug(uc_engine* uc, uint32_t address, uint32_t size, void* user_data) {
     debugging = 0;
     uc_reg_read(uc, UC_ARM_REG_PC, &pc);
     printf("Resuming emulation\n");
+
     start_emulation(uc, pc + size, 0);
 }

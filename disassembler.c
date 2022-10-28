@@ -16,7 +16,7 @@ void disassemble(uc_engine* uc, uint32_t addr, uint32_t size, char* out) {
         log_error("failed on cs_open(), quit");
     }
 
-    uint8_t* bytes = malloc(size);
+    uint8_t* bytes = calloc(1, size);
     uc_mem_read(uc, addr, bytes, size);
 
     count = cs_disasm(handle, bytes, size, 0x0, 0, &insn);
@@ -27,7 +27,7 @@ void disassemble(uc_engine* uc, uint32_t addr, uint32_t size, char* out) {
         }
         cs_free(insn, count);
     } else {
-        log_error("Failed to disassemble given code! 0x%X %d",*(uint32_t*)bytes, size);
+        log_error("Failed to disassemble given %s code! 0x%08X: 0x%08X (size: %d)", (cpsr & 0x20) ? "THUMB" : "ARM", addr, *(uint32_t*)bytes, size);
     }
 
     free(bytes);
