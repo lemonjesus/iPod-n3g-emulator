@@ -170,7 +170,7 @@ int start_emulation(uc_engine* uc, uint32_t start, uint32_t count) {
 
     start |= (cpsr & 0x20) >> 5;
 
-    uc_err err = uc_emu_start(uc, start, 0x40000000, 0, count);
+    uc_err err = uc_emu_start(uc, start, ~0, 0, count);
   
     if (err) {
         char* inst_dump = malloc(128);
