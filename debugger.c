@@ -34,6 +34,7 @@ int debugger_init(uc_engine* uc, Arguments* a) {
 }
 
 void hook_code(uc_engine* uc, uint32_t address, uint32_t size, void* user_data) {
+    disasm_buffer[0] = '\0';
     disassemble(uc, address, size, disasm_buffer);
     uint32_t cpsr, instruction = 0;
     uc_mem_read(uc, address, &instruction, size);
@@ -113,7 +114,7 @@ debug_command commands[] = {
     {"step", "", 's', debug_step, "Steps to the next instruction"},
     {"break", "<address>", 'b', debug_break, "Sets a breakpoint at the specified address"},
     {"rmbreak", "<address>", 'x', debug_rmbreak, "Removes a breakpoint at the specified address"},
-    // {"disassemble", "<address> <count>", 'd', debug_disassemble, "Disassembles <count> instructions starting at <address>"},
+    {"disassemble", "<address> [count=16]", 'd', debug_disassemble, "Disassembles <count> instructions starting at <address>"},
     {"registers", "", 'r', debug_registers, "Dumps the current register values"},
     {"memory", "<address|register> [count=128]", 'm', debug_memory, "Prints <count> bytes of memory starting at <address> (or the pointer in <register>)"},
     // {"write", "<address> <value>", 'w', debug_write, "Writes <value> to <address>"},
@@ -214,6 +215,41 @@ int debug_registers(uc_engine* uc, uint32_t address, uint32_t size, char** args,
     }
     printf("R0 = 0x%x\tR1 = 0x%x\tR2 = 0x%x\tR3 = 0x%x\tR4 = 0x%x\tR5 = 0x%x\tR6 = 0x%x\tR7 = 0x%x\n", registers[0], registers[1], registers[2], registers[3], registers[4], registers[5], registers[6], registers[7]);
     printf("R8 = 0x%x\tSB = 0x%x\tSL = 0x%x\tFP = 0x%x\tIP = 0x%x\tSP = 0x%x\tLR = 0x%x\tPC = 0x%x\n", registers[8], registers[9], registers[10], registers[11], registers[12], registers[13], registers[14], registers[15]);
+    return 0;
+}
+
+int debug_disassemble(uc_engine* uc, uint32_t address, uint32_t size, char** argv, int argc) {
+    if(argc < 1) {
+        printf("Usage: disassemble <address> [count=16]\n");
+        return 0;
+    }
+
+    uint32_t addr = 0;
+    if(argv[0][0] == '0' && argv[0][1] == 'x') {
+        addr = strtol(argv[0], NULL, 16);
+    } else {
+        uc_arm_reg reg = reg_name_to_id(argv[0]);
+        if(reg != UC_ARM_REG_INVALID) {
+            uc_reg_read(uc, reg, &addr);
+        } else {
+            printf("Invalid address or register: %s\n", argv[1]);
+            return 0;
+        }
+    }
+
+    uint32_t cpsr;
+    uc_reg_read(uc, UC_ARM_REG_CPSR, &cpsr);
+
+    int count = 16;
+    if(argc > 1) count = strtol(argv[1], NULL, 10);
+    count *= (cpsr & 0x20) ? 2 : 4;
+
+    char* buffer = calloc(1, 128 * count);
+    printf("Disassembly of %d bytes starting at 0x%08X:\n", count, addr);
+    disassemble(uc, addr, count, buffer);
+
+    printf("%s\n", buffer);
+    free(buffer);
     return 0;
 }
 

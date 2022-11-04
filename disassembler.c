@@ -16,19 +16,20 @@ void disassemble(uc_engine* uc, uint32_t addr, uint32_t size, char* out) {
         log_error("failed on cs_open(), quit");
     }
 
-    uint32_t bytes = 0;
-    uc_mem_read(uc, addr, &bytes, size);
+    uint8_t* bytes = calloc(1, size);
+    uc_mem_read(uc, addr, bytes, size);
 
-    count = cs_disasm(handle, &bytes, size, 0x0, 0, &insn);
+    count = cs_disasm(handle, bytes, size, addr, 0, &insn);
     if (count > 0) {
-        size_t j;
-        for (j = 0; j < count; j++) {
-            sprintf(out, "%s %s", insn[j].mnemonic, insn[j].op_str);
+        for (size_t j = 0; j < count; j++) {
+            sprintf(out + strlen(out), "%s %s\n", insn[j].mnemonic, insn[j].op_str);
         }
         cs_free(insn, count);
+        out[strlen(out) - 1] = '\0';
     } else {
-        log_error("Failed to disassemble given %s code! 0x%08X: 0x%08X (size: %d)", (cpsr & 0x20) ? "THUMB" : "ARM", addr, bytes, size);
+        log_error("Failed to disassemble given %s code! 0x%08X: 0x%08X (size: %d)", (cpsr & 0x20) ? "THUMB" : "ARM", addr, *(uint32_t*)bytes, size);
     }
 
+    free(bytes);
     cs_close(&handle);
 }

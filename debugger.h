@@ -18,6 +18,7 @@ int debug_help(uc_engine* uc, uint32_t address, uint32_t size, char** args, int 
 int debug_quit(uc_engine* uc, uint32_t address, uint32_t size, char** args, int argc);
 int debug_step(uc_engine* uc, uint32_t address, uint32_t size, char** args, int argc);
 int debug_registers(uc_engine* uc, uint32_t address, uint32_t size, char** args, int argc);
+int debug_disassemble(uc_engine* uc, uint32_t address, uint32_t size, char** args, int argc);
 int debug_memory(uc_engine* uc, uint32_t address, uint32_t size, char** args, int argc);
 int debug_break(uc_engine* uc, uint32_t address, uint32_t size, char** args, int argc);
 int debug_rmbreak(uc_engine* uc, uint32_t address, uint32_t size, char** args, int argc);
