@@ -14,15 +14,13 @@
 char* disasm_buffer;
 uc_hook instruction_trace;
 
-uint32_t* breakpoints;
-uint32_t breakpoint_count;
+Arguments* args;
+int orig_log_level;
 
 extern int keepRunning;
 
-int debugger_init(uc_engine* uc, Arguments* args) {
-    breakpoints = args->breakpoints;
-    breakpoint_count = args->breakpoint_count;
-
+int debugger_init(uc_engine* uc, Arguments* a) {
+    args = a;
     disasm_buffer = malloc(128);
 
     uc_err err = uc_hook_add(uc, &instruction_trace, UC_HOOK_CODE, hook_code, NULL, 0, 0x40000000);
@@ -87,8 +85,17 @@ void hook_code(uc_engine* uc, uint32_t address, uint32_t size, void* user_data) 
         debug(uc, address, size, user_data);
     }
 
-    for(int i = 0; i < breakpoint_count; i++) {
-        if(address == breakpoints[i]) {
+    if(address == args->trace_from) {
+        orig_log_level = log_get_level();
+        log_set_level(LOG_TRACE);
+    }
+
+    if(address == args->trace_to) {
+        log_set_level(orig_log_level);
+    }
+
+    for(int i = 0; i < args->breakpoint_count; i++) {
+        if(address == args->breakpoints[i]) {
             uc_emu_stop(uc);
             log_debug("Hit Breakpoint %d", i);
             debug(uc, address, size, user_data);
@@ -210,30 +217,30 @@ int debug_registers(uc_engine* uc, uint32_t address, uint32_t size, char** args,
     return 0;
 }
 
-int debug_break(uc_engine* uc, uint32_t address, uint32_t size, char** args, int argc) {
+int debug_break(uc_engine* uc, uint32_t address, uint32_t size, char** argv, int argc) {
     if(argc < 1) {
         printf("Usage: break <address>\n");
         return 0;
     }
 
-    uint32_t addr = strtol(args[0], NULL, 16);
-    breakpoints[breakpoint_count++] = addr;
+    uint32_t addr = strtol(argv[0], NULL, 16);
+    args->breakpoints[args->breakpoint_count++] = addr;
     return 0;
 }
 
-int debug_rmbreak(uc_engine* uc, uint32_t address, uint32_t size, char** args, int argc) {
+int debug_rmbreak(uc_engine* uc, uint32_t address, uint32_t size, char** argv, int argc) {
     if(argc < 1) {
         printf("Usage: rmbreak <address>\n");
         return 0;
     }
 
-    uint32_t addr = strtol(args[0], NULL, 16);
-    for(int i = 0; i < breakpoint_count; i++) {
-        if(breakpoints[i] == addr) {
-            for(int j = i; j < breakpoint_count - 1; j++) {
-                breakpoints[j] = breakpoints[j + 1];
+    uint32_t addr = strtol(argv[0], NULL, 16);
+    for(int i = 0; i < args->breakpoint_count; i++) {
+        if(args->breakpoints[i] == addr) {
+            for(int j = i; j < args->breakpoint_count - 1; j++) {
+                args->breakpoints[j] = args->breakpoints[j + 1];
             }
-            breakpoint_count--;
+            args->breakpoint_count--;
             break;
         }
     }

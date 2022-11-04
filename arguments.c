@@ -35,6 +35,14 @@ error_t parse_opt(int key, char *arg, struct argp_state *state) {
                     break;
             }
             break;
+        case 't':
+            sscanf(arg, "0x%x", &args->trace_from);
+            log_debug("Trace from 0x%08X", args->trace_from);
+            break;
+        case 'T':
+            sscanf(arg, "0x%x", &args->trace_to);
+            log_debug("Trace to 0x%08X", args->trace_to);
+            break;
         default:
             return ARGP_ERR_UNKNOWN;
         }

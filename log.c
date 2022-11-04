@@ -90,6 +90,10 @@ static void unlock(void) {
   if (L.lock) { L.lock(false, L.udata); }
 }
 
+int log_get_level() {
+  return L.level;
+}
+
 
 const char* log_level_string(int level) {
   return level_strings[level];
