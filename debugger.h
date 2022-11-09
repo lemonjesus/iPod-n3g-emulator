@@ -22,6 +22,7 @@ int debug_disassemble(uc_engine* uc, uint32_t address, uint32_t size, char** arg
 int debug_memory(uc_engine* uc, uint32_t address, uint32_t size, char** args, int argc);
 int debug_break(uc_engine* uc, uint32_t address, uint32_t size, char** args, int argc);
 int debug_rmbreak(uc_engine* uc, uint32_t address, uint32_t size, char** args, int argc);
+int debug_log(uc_engine* uc, uint32_t address, uint32_t size, char** argv, int argc);
 
 typedef struct debug_command {
     char* name;

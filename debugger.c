@@ -64,7 +64,7 @@ void hook_code(uc_engine* uc, uint32_t address, uint32_t size, void* user_data) 
         uint32_t sysconfig;
         log_set_level(LOG_TRACE);
         uc_reg_read(uc, UC_ARM_REG_R0, &sysconfig);
-        log_trace("sysconfig = 0x%x", sysconfig);
+        log_debug("sysconfig = 0x%x", sysconfig);
     }
 
     if(address == 0x9ee025c) {
@@ -120,7 +120,7 @@ debug_command commands[] = {
     // {"write", "<address> <value>", 'w', debug_write, "Writes <value> to <address>"},
     // {"read", "<address>", 'r', debug_read, "Reads the value at <address>"},
     // {"trace", "", 't', debug_trace, "Toggles instruction tracing"},
-    // {"log", "<level>", 'l', debug_log, "Sets the log level to <level>"},
+    {"log", "<level>", 'l', debug_log, "Sets the log level to <level>"},
 };
 
 uc_arm_reg reg_name_to_id(char* regname) {
@@ -213,8 +213,18 @@ int debug_registers(uc_engine* uc, uint32_t address, uint32_t size, char** args,
     for (int i = 0; i < 16; i++) {
         uc_reg_read(uc, UC_ARM_REG_R0 + i, &registers[i]);
     }
+
+    uint32_t SB, SL, FP, IP, SP, LR;
+    uc_reg_read(uc, UC_ARM_REG_SB, &SB);
+    uc_reg_read(uc, UC_ARM_REG_SL, &SL);
+    uc_reg_read(uc, UC_ARM_REG_FP, &FP);
+    uc_reg_read(uc, UC_ARM_REG_IP, &IP);
+    uc_reg_read(uc, UC_ARM_REG_SP, &SP);
+    uc_reg_read(uc, UC_ARM_REG_LR, &LR);
+
     printf("R0 = 0x%x\tR1 = 0x%x\tR2 = 0x%x\tR3 = 0x%x\tR4 = 0x%x\tR5 = 0x%x\tR6 = 0x%x\tR7 = 0x%x\n", registers[0], registers[1], registers[2], registers[3], registers[4], registers[5], registers[6], registers[7]);
-    printf("R8 = 0x%x\tSB = 0x%x\tSL = 0x%x\tFP = 0x%x\tIP = 0x%x\tSP = 0x%x\tLR = 0x%x\tPC = 0x%x\n", registers[8], registers[9], registers[10], registers[11], registers[12], registers[13], registers[14], registers[15]);
+    printf("R8 = 0x%x\tR9 = 0x%x\tR10 = 0x%x\tR11 = 0x%x\tR12 = 0x%x\tR13 = 0x%x\tR14 = 0x%x\tR15 = 0x%x\n", registers[8], registers[9], registers[10], registers[11], registers[12], registers[13], registers[14], registers[15]);
+    printf("SB = 0x%x\tSL = 0x%x\tFP = 0x%x\tIP = 0x%x\tSP = 0x%x\tLR = 0x%x\tPC = 0x%x\n", registers[8], SB, SL, FP, IP, SP, LR, pc);
     return 0;
 }
 
@@ -283,6 +293,41 @@ int debug_rmbreak(uc_engine* uc, uint32_t address, uint32_t size, char** argv, i
     return 0;
 }
 
+int debug_log(uc_engine* uc, uint32_t address, uint32_t size, char** argv, int argc) {
+    if(argc < 1) {
+        printf("Usage: log <log level f,e,w,i,d,t>\n");
+        return 0;
+    }
+
+    int log_level;
+
+    switch(argv[0][0]) {
+        case 'f':
+            log_level = LOG_FATAL;
+            break;
+        case 'e':
+            log_level = LOG_ERROR;
+            break;
+        case 'w':
+            log_level = LOG_WARN;
+            break;
+        case 'i':
+            log_level = LOG_INFO;
+            break;
+        case 'd':
+            log_level = LOG_DEBUG;
+            break;
+        case 't':
+            log_level = LOG_TRACE;
+            break;
+        default:
+            printf("Invalid log level: %s\n", argv[0]);
+            return 0;
+    }
+
+    log_set_level(log_level);
+}
+
 void debug(uc_engine* uc, uint32_t address, uint32_t size, void* user_data) {
     if(debugging) return;
     debugging = 1;
@@ -346,5 +391,5 @@ void debug(uc_engine* uc, uint32_t address, uint32_t size, void* user_data) {
     uc_reg_read(uc, UC_ARM_REG_PC, &pc);
     printf("Resuming emulation\n");
 
-    start_emulation(uc, pc + size, 0);
+    start_emulation(uc, pc, 0);
 }
