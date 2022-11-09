@@ -18,6 +18,7 @@
 #include "core/gpio.c"
 #include "core/i2c.c"
 #include "core/interrupt_controllers.c"
+#include "core/lcd.c"
 #include "core/miu.c"
 #include "core/ram.c"
 #include "core/sha1.c"
@@ -111,6 +112,7 @@ int main(int argc, char **argv) {
         i2c0, i2c1,
         interrupt_controller,
         iram,
+        lcd,
         miu,
         otgphy,
         sha1,

@@ -60,11 +60,8 @@ void hook_code(uc_engine* uc, uint32_t address, uint32_t size, void* user_data) 
         log_trace("r1 = 0x%x", r1);
     }
 
-    if(address == 0x9ee0306) {
-        uint32_t sysconfig;
+    if(address == 0x9fc34d8) {
         log_set_level(LOG_TRACE);
-        uc_reg_read(uc, UC_ARM_REG_R0, &sysconfig);
-        log_debug("sysconfig = 0x%x", sysconfig);
     }
 
     if(address == 0x9ee025c) {
