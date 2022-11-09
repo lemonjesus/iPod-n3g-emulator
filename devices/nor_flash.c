@@ -26,7 +26,7 @@ int norboot_init(void* dev) {
     meta->content = calloc(1, 0x100000);
     meta->content_buffer_index = 0;
 
-    // load nor_image.bin into norflash at 0x8000
+    // load nor_image.bin into norflash at 0x0
     FILE* efi = fopen("nor_image.bin", "rb");
     if(efi == NULL) {
         log_error("Failed to open nor_image.bin");
@@ -79,7 +79,7 @@ int norboot_write(void* self, uint32_t cmd) {
 
     meta->cmd_buffer[meta->cmd_buffer_index++] = cmd;
 
-    log_trace("NORBOOT: Recv Command 0x%x (full buffer: 0x%02x%02x%02x%02x)", cmd, meta->cmd_buffer[0], meta->cmd_buffer[1], meta->cmd_buffer[2], meta->cmd_buffer[3]);
+    log_debug("NORBOOT: Recv Command 0x%x (full buffer: 0x%02x%02x%02x%02x)", cmd, meta->cmd_buffer[0], meta->cmd_buffer[1], meta->cmd_buffer[2], meta->cmd_buffer[3]);
 
     if(cmd == 0xFF) {
         log_debug("NORBOOT: Resetting");

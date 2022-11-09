@@ -165,9 +165,6 @@ int start_emulation(uc_engine* uc, uint32_t start, uint32_t count) {
 
     uint32_t pc, instruction, cpsr;
     uc_reg_read(uc, UC_ARM_REG_CPSR, &cpsr);
-    uint32_t size = (cpsr & 0x20) ? 2 : 4;
-    log_fatal("CPU is in %s mode", (cpsr & 0x20) ? "THUMB" : "ARM");
-
     start |= (cpsr & 0x20) >> 5;
 
     uc_err err = uc_emu_start(uc, start, ~0, 0, count);

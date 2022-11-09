@@ -16,7 +16,7 @@ int memcpy_execute(uc_engine* uc, uint32_t address, uint32_t size, void* user_da
     uc_reg_read(uc, UC_ARM_REG_R0, &dest);
     uc_reg_read(uc, UC_ARM_REG_R1, &src);
     uc_reg_read(uc, UC_ARM_REG_R2, &zsize);
-    log_debug("%s called for 0x%x bytes from 0x%08x to 0x%08x",pv->name, zsize, dest, src);
+    log_trace("%s called for 0x%x bytes from 0x%08x to 0x%08x",pv->name, zsize, dest, src);
 
     void* memory = malloc(zsize);
     uc_mem_read(uc, src, memory, zsize);

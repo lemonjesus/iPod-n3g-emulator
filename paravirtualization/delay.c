@@ -10,7 +10,7 @@
 int delay_execute(uc_engine* uc, uint32_t address, uint32_t size, void* user_data) {
     uint32_t ticks; // r0
     uc_reg_read(uc, UC_ARM_REG_R0, &ticks);
-    log_debug("Delay called for %d ticks", ticks);
+    log_trace("Delay called for %d ticks", ticks);
 
     //skip the function
     uint32_t pc;

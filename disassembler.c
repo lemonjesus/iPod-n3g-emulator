@@ -9,6 +9,8 @@ void disassemble(uc_engine* uc, uint32_t addr, uint32_t size, char* out) {
     cs_insn *insn;
     size_t count;
 
+    out[0] = '\0';
+
     uint32_t cpsr;
     uc_reg_read(uc, UC_ARM_REG_CPSR, &cpsr);
 
