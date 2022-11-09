@@ -147,7 +147,7 @@ int main(int argc, char **argv) {
         delay,
         memcpy_stub0,
         memzero_stub0, memzero_stub1,
-        nor_flash_loader
+        bootrom_nor_flash_loader, efi_nor_flash_loader
     };
 
     for(int i = 0; i < sizeof(paravirtualizers) / sizeof(paravirtualizers[0]); i++) {
