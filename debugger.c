@@ -17,6 +17,9 @@ uc_hook instruction_trace;
 Arguments* args;
 int orig_log_level;
 
+uint32_t call_stack[512];
+uint16_t call_depth = 0;
+
 extern int keepRunning;
 
 int debugger_init(uc_engine* uc, Arguments* a) {
@@ -33,6 +36,12 @@ int debugger_init(uc_engine* uc, Arguments* a) {
     log_info("Loaded the Debugger");
 }
 
+marker known_markers[] = {
+    {0x200006d0, LOG_FATAL, "verify_img_failer has failed!"},
+    {0x20003758, LOG_FATAL, "something has failed and the iPod is waiting in a USB DFU loop! Exiting."},
+    {0x200034a0, LOG_INFO, "entering the EFI!"}
+};
+
 void hook_code(uc_engine* uc, uint32_t address, uint32_t size, void* user_data) {
     disasm_buffer[0] = '\0';
     disassemble(uc, address, size, disasm_buffer);
@@ -40,18 +49,14 @@ void hook_code(uc_engine* uc, uint32_t address, uint32_t size, void* user_data) 
     uc_mem_read(uc, address, &instruction, size);
     uc_reg_read(uc, UC_ARM_REG_CPSR, &cpsr);
     log_trace(">>> Tracing %s instruction at 0x%x instruction = %s (0x%08X)",(cpsr & 0x20) ? "THUMB" : "ARM", address, disasm_buffer, instruction);
-    if(address == 0x200006d0) {
-        log_error("verify_img_header has failed!");
-        exit(1);
-    }
-
-    if(address == 0x20003758) {
-        log_error("something has failed and the iPod is waiting in a USB DFU loop! Exiting.");
-        exit(1);
-    }
-
-    if(address == 0x200034a0) {
-        log_info("entering the EFI!");
+    
+    // check markers
+    for(int i = 0; i < sizeof(known_markers)/sizeof(marker); i++) {
+        if(known_markers[i].address == address) {
+            log_log(known_markers[i].level, __FILE__, __LINE__, known_markers[i].message);
+            if(known_markers[i].level == LOG_FATAL) exit(1);
+            break;
+        }
     }
 
     if(address == 0x9ef133a) {

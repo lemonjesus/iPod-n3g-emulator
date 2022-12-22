@@ -32,6 +32,12 @@ typedef struct debug_command {
     char* help;
 } debug_command;
 
+typedef struct marker {
+	uint32_t address;
+	int level;
+	char* message;
+} marker;
+
 typedef struct name_map {
     unsigned int id;
     const char* name;
