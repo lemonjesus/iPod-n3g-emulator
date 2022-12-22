@@ -226,21 +226,20 @@ int debug_registers(uc_engine* uc, uint32_t address, uint32_t size, char** args,
 }
 
 int debug_disassemble(uc_engine* uc, uint32_t address, uint32_t size, char** argv, int argc) {
-    if(argc < 1) {
-        printf("Usage: disassemble <address> [count=16]\n");
-        return 0;
-    }
-
     uint32_t addr = 0;
-    if(argv[0][0] == '0' && argv[0][1] == 'x') {
-        addr = strtol(argv[0], NULL, 16);
+    if(argc < 1) {
+        uc_reg_read(uc, UC_ARM_REG_PC, &addr);
     } else {
-        uc_arm_reg reg = reg_name_to_id(argv[0]);
-        if(reg != UC_ARM_REG_INVALID) {
-            uc_reg_read(uc, reg, &addr);
+        if(argv[0][0] == '0' && argv[0][1] == 'x') {
+            addr = strtol(argv[0], NULL, 16);
         } else {
-            printf("Invalid address or register: %s\n", argv[1]);
-            return 0;
+            uc_arm_reg reg = reg_name_to_id(argv[0]);
+            if(reg != UC_ARM_REG_INVALID) {
+                uc_reg_read(uc, reg, &addr);
+            } else {
+                printf("Invalid address or register: %s\n", argv[1]);
+                return 0;
+            }
         }
     }
 
