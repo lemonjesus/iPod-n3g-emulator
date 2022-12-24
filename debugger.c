@@ -59,27 +59,20 @@ void hook_code(uc_engine* uc, uint32_t address, uint32_t size, void* user_data) 
         }
     }
 
+    // // does this instruction add or remove from the call stack?
+    // if( ((cpsr & 0x20) && instruction >> 8 == 0xB5) || // THUMB: a POP that includes PC is considered a return
+    //     ((cspr & 0x20) && instruction == )) { // THUMB: a BX lr is also a return
+
+    // }
+
     if(address == 0x9ef133a) {
         uint32_t r1;
         uc_reg_read(uc, UC_ARM_REG_R1, &r1);
         log_trace("r1 = 0x%x", r1);
     }
 
-    if(address == 0x9fc34d8) {
+    if(address == 0x9ef532c) {
         log_set_level(LOG_TRACE);
-    }
-
-    if(address == 0x9ee025c) {
-        uint32_t r0;
-        uc_reg_read(uc, UC_ARM_REG_R0, &r0);
-        log_info("system memory size returning r0 = 0x%x", r0);
-    }
-
-    if(address == 0x9ee0402) {
-        uint32_t r0, r6;
-        uc_reg_read(uc, UC_ARM_REG_R0, &r0);
-        uc_reg_read(uc, UC_ARM_REG_R6, &r6);
-        log_info("r0 = 0x%x r6 = 0x%x", r0, r6);
     }
 
     if(keepRunning == 0) {
